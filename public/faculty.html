@@ -1,0 +1,2048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Faculty Dashboard | LMS</title>
+<link rel="stylesheet" href="/css/style.css" />
+<!-- Chart.js CDN for visual analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="sidebar-layout">
+
+  <!-- OVERLAY BACKDROP -->
+  <div id="sidebarBackdrop" class="sidebar-backdrop hidden" onclick="closeSidebar()"></div>
+
+  <!-- COLLAPSIBLE SIDEBAR OVERLAY DRAWER -->
+  <aside id="sidebarDrawer" class="sidebar-drawer">
+    <div class="sidebar-brand">
+      <span>🎓 Faculty Portal</span>
+      <button onclick="closeSidebar()" style="background:transparent;border:none;color:#ffffff;font-size:18px;cursor:pointer;padding:0">✕</button>
+    </div>
+    <ul class="sidebar-menu">
+      <li id="snav-dashboard" class="sidebar-item active" onclick="showTab('dashboard')">
+        <span>📊</span> <span>Dashboard</span>
+      </li>
+      <li id="snav-students" class="sidebar-item" onclick="showTab('students')">
+        <span>👥</span> <span>Students</span>
+      </li>
+      <li id="snav-courses" class="sidebar-item" onclick="showTab('courses')">
+        <span>📚</span> <span>Courses</span>
+      </li>
+      <li id="snav-exams" class="sidebar-item" onclick="showTab('exams')">
+        <span>📝</span> <span>Exams &amp; Tests</span>
+      </li>
+      <li id="snav-roadmaps" class="sidebar-item" onclick="showTab('roadmaps')">
+        <span>🗺️</span> <span>Create Roadmap</span>
+      </li>
+      <li id="snav-monitor" class="sidebar-item" onclick="showTab('monitor')">
+        <span>📊</span> <span>Roadmap Tracker</span>
+      </li>
+      <li id="snav-verify" class="sidebar-item" onclick="showTab('verify')">
+        <span>✅</span> <span>Verify Results</span>
+      </li>
+      <li id="snav-connect" class="sidebar-item" onclick="showTab('connect')">
+        <span>💬</span> <span>Faculty Connect</span>
+        <span id="navUnreadBadge" class="badge danger-badge" style="display:none;margin-left:auto;font-size:11px;padding:2px 8px">🔴 0</span>
+      </li>
+    </ul>
+    <div style="padding:16px;border-top:1px solid #e2e8f0;display:flex;flex-direction:column;gap:8px">
+      <button id="themeToggleBtn" class="theme-toggle-btn" style="width:100%;padding:10px;text-align:center" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙 Dark</button>
+      <button class="secondary" style="width:100%;padding:10px;font-weight:600" onclick="openChangePasswordModal()">🔑 Change Password</button>
+      <button class="danger" style="width:100%;padding:12px;font-weight:700;background:#ef4444;color:#ffffff;border:none;border-radius:10px;cursor:pointer" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT WRAPPER -->
+  <main id="mainContentWrapper" class="main-content-wrapper">
+
+    <!-- TOP HEADER BAR WITH HAMBURGER TOGGLE & GREETING -->
+    <div class="top-bar-header">
+      <div class="top-bar-left">
+        <button class="hamburger-toggle-btn" onclick="toggleSidebar()" title="Open Navigation Menu">☰ Menu</button>
+        <div style="min-width:0;flex:1">
+          <h1 id="welcomeGreeting" class="greeting-title">Welcome, Sir</h1>
+          <div style="font-size:13px;color:#64748b" id="dateDisplay">Faculty Control Panel &amp; Management Dashboard</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 0. DASHBOARD ANALYTICS HOME TAB -->
+    <div id="tab-dashboard">
+      <!-- Summary Metric Cards -->
+      <div class="metric-card-grid">
+        <div class="metric-card">
+          <div class="metric-icon">👥</div>
+          <div class="metric-info">
+            <div class="label">Total Students</div>
+            <div class="val" id="metricTotalStudents">0</div>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon" style="background:#ecfdf5;color:#059669">🗺️</div>
+          <div class="metric-info">
+            <div class="label">Active Roadmaps</div>
+            <div class="val" id="metricActiveRoadmaps">0</div>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon" style="background:#fef3c7;color:#d97706">📝</div>
+          <div class="metric-info">
+            <div class="label">Exam Submissions</div>
+            <div class="val" id="metricExamSubmissions">0</div>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon" style="background:#e0e7ff;color:#3730a3">💬</div>
+          <div class="metric-info">
+            <div class="label">Unread Messages</div>
+            <div class="val" id="metricUnreadMessages">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual Analytics Charts Grid -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3 style="margin-bottom:14px;font-size:16px">📊 Overall Class Performance</h3>
+          <p style="font-size:13px;color:#64748b;margin-bottom:16px">Pass vs. Fail distribution across all submitted exams</p>
+          <div style="position:relative;height:260px;display:flex;justify-content:center">
+            <canvas id="performanceChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h3 style="margin-bottom:14px;font-size:16px">📈 Student Activity &amp; Branch Breakdown</h3>
+          <p style="font-size:13px;color:#64748b;margin-bottom:16px">Registered student distribution by engineering branch</p>
+          <div style="position:relative;height:260px">
+            <canvas id="activityChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. STUDENTS TAB -->
+    <div id="tab-students" style="display:none">
+      <h2>Add New Student</h2>
+      <form onsubmit="return addStudent(event)" style="background:#ffffff;padding:18px;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div id="addStError" class="error" style="display:none"></div>
+        <div id="addStSuccess" class="success" style="display:none"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="font-size:12px;font-weight:600">Full Name</label>
+            <input id="asFullName" placeholder="e.g. John Doe" required />
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600">Registration Number (Regd No)</label>
+            <input id="asRegdNo" placeholder="e.g. 24B91A4731" required />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
+          <div>
+            <label style="font-size:12px;font-weight:600">Branch</label>
+            <select id="asBranch" required></select>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600">Section</label>
+            <select id="asSection" required></select>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600">Year</label>
+            <select id="asYear" required></select>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600">Phone Number</label>
+            <input id="asPhone" placeholder="e.g. 9876543210" required />
+          </div>
+        </div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:10px">
+          ℹ️ Initial password automatically defaults to Registration Number (Regd No).
+        </div>
+        <button type="submit" style="width:auto;padding:10px 24px">+ Create Student Account</button>
+      </form>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <h2 style="margin:0">All Registered Students</h2>
+        <div style="display:flex;gap:10px;width:50%">
+          <select id="filterBranch" onchange="renderStudentTable()" style="margin:0;width:40%">
+            <option value="">All Branches</option>
+          </select>
+          <input id="searchStudent" placeholder="Search by Name or Regd No..." oninput="renderStudentTable()" style="margin:0;width:60%" />
+        </div>
+      </div>
+      <div id="studentTable"></div>
+    </div>
+
+    <!-- 2. COURSES TAB -->
+    <div id="tab-courses" style="display:none">
+      <h2>Add New Course</h2>
+      <form onsubmit="return addCourse(event)" style="background:#ffffff;padding:18px;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div id="addCourseError" class="error" style="display:none"></div>
+        <div id="addCourseSuccess" class="success" style="display:none"></div>
+        <label style="font-size:12px;font-weight:600">Course Title</label>
+        <input id="cTitle" placeholder="Course Title (e.g. C Programming Essentials)" required />
+        <label style="font-size:12px;font-weight:600">Course Description</label>
+        <textarea id="cDesc" rows="3" placeholder="Brief description of course objectives and syllabus..."></textarea>
+        <button type="submit" style="width:auto;padding:10px 24px">+ Create Course</button>
+      </form>
+
+      <h2>All Created Courses</h2>
+      <div id="courseTable"></div>
+    </div>
+
+    <!-- 3. EXAMS & TESTS TAB -->
+    <div id="tab-exams" style="display:none">
+      <h2>Create &amp; Assign Test</h2>
+      <div id="testMsg" class="error" style="display:none"></div>
+      <div id="testSuccess" class="success" style="display:none"></div>
+      <form onsubmit="return createTest(event)" style="background:#ffffff;padding:20px;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <label style="font-weight:600;font-size:13px;display:block">Course Name</label>
+        <select id="tCourse" required style="margin-bottom:12px"></select>
+
+        <label style="font-weight:600;font-size:13px;display:block">Test Title</label>
+        <input id="tTitle" placeholder="e.g. Week 1 Assessment / Entrance Exam" required />
+
+        <div style="display:flex;gap:12px">
+          <div style="flex:1">
+            <label style="font-weight:600;font-size:13px;display:block">Exam Type</label>
+            <select id="tType" onchange="onTestTypeChange()">
+              <option value="entrance">Entrance Test</option>
+              <option value="weekly">Weekly Exam</option>
+              <option value="day3">Day 3 Exam</option>
+              <option value="day7">Day 7 Exam</option>
+              <option value="day21">Day 21 Exam</option>
+              <option value="custom">Custom Exam</option>
+            </select>
+          </div>
+          <div id="weekNumWrap" style="flex:1;display:none">
+            <label style="font-weight:600;font-size:13px;display:block">Week Number (Required for Weekly Tests)</label>
+            <input id="tWeekNumber" type="number" placeholder="e.g. 1" min="1" />
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px">
+          <div style="flex:1">
+            <label style="font-weight:600;font-size:13px;display:block">Duration (minutes)</label>
+            <input id="tDuration" type="number" value="30" min="1" />
+          </div>
+          <div style="flex:1">
+            <label style="font-weight:600;font-size:13px;display:block">Passing Score</label>
+            <input id="tPassing" type="number" value="1" min="0" />
+          </div>
+        </div>
+
+        <div id="entranceTestNotice" style="background:#e0e7ff;color:#3730a3;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin:12px 0 14px">
+          ℹ️ Entrance Tests are common for all students upon course enrollment.
+        </div>
+
+        <div id="assignStudentsWrap" style="display:none">
+          <label style="font-weight:600;font-size:13px;display:block">Assign to Specific Students (Multi-select, leave empty for All Students)</label>
+          <select id="tAssignStudents" multiple style="height:110px;margin-bottom:14px">
+          </select>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 8px">
+          <h3 style="margin:0">Questions Builder</h3>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="secondary" onclick="openBulkQuestionModal()" style="width:auto;padding:6px 14px;font-size:13px">📥 Bulk Add Questions</button>
+            <button type="button" onclick="addQuestion()" style="width:auto;padding:6px 14px;font-size:13px">+ Add Question</button>
+          </div>
+        </div>
+        <div id="questionsContainer"></div>
+
+        <button type="submit" style="margin-top:14px">🚀 Publish &amp; Assign Test</button>
+      </form>
+
+      <h2>Published Tests List</h2>
+      <div id="testListTable"></div>
+    </div>
+
+    <!-- 4. ROADMAPS TAB (Create & Upload) -->
+    <div id="tab-roadmaps" style="display:none">
+      <h2>Create Roadmap for a Student</h2>
+      <div id="rmMsg" class="error" style="display:none"></div>
+      <div id="rmOk" class="success" style="display:none"></div>
+      <form onsubmit="return createRoadmap(event)" style="background:#ffffff;padding:20px;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <label style="font-size:13px;font-weight:600;display:block">Student (Select by Regd No / Name)</label>
+        <select id="rmStudentSel" onchange="onStudentSelectedForRoadmap()" required style="margin-bottom:12px">
+          <option value="">— select a student —</option>
+        </select>
+
+        <label style="font-size:13px;font-weight:600;display:block">Course (Auto-populated for Student)</label>
+        <select id="rmCourseSel" required style="margin-bottom:12px">
+          <option value="">— select a course —</option>
+        </select>
+
+        <label style="font-size:13px;font-weight:600;display:block">Number of Weeks</label>
+        <input id="rmWeeks" type="number" placeholder="e.g. 4" min="1" value="4" required />
+
+        <button type="submit">Create Roadmap</button>
+      </form>
+
+      <hr style="margin:24px 0;border:none;border-top:1px solid #e2e8f0"/>
+
+      <h2>Upload Resource to Roadmap Week</h2>
+      <div id="uploadErr" class="error" style="display:none"></div>
+      <div id="uploadOk" class="success" style="display:none"></div>
+      <form onsubmit="return uploadResource(event)" style="background:#ffffff;padding:20px;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <label style="font-size:13px;font-weight:600;display:block">Select Roadmap (Student — Course)</label>
+        <select id="upRoadmapSel" onchange="loadWeekOptions()" required style="margin-bottom:12px">
+          <option value="">— select a roadmap —</option>
+        </select>
+
+        <label style="font-size:13px;font-weight:600;display:block">Select Week Number</label>
+        <select id="upWeekSel" required style="margin-bottom:12px">
+          <option value="">— select week —</option>
+        </select>
+
+        <label style="font-size:13px;font-weight:600;display:block">Resource Title</label>
+        <input id="upTitle" placeholder="e.g. Week 1 Lecture Notes &amp; Video" required />
+
+        <label style="font-size:13px;font-weight:600;display:block">File Type</label>
+        <select id="upType" style="margin-bottom:12px">
+          <option value="video">🎥 Video (.mp4, .mov, .webm)</option>
+          <option value="pdf">📄 PDF Document (.pdf)</option>
+          <option value="ppt">📊 Presentation (.ppt, .pptx)</option>
+          <option value="docx">📝 Word Document (.doc, .docx)</option>
+        </select>
+
+        <label style="font-size:13px;font-weight:600;display:block">Choose File</label>
+        <input id="upFile" type="file" required style="margin-bottom:14px"/>
+
+        <button type="submit">⬆ Upload Resource</button>
+      </form>
+    </div>
+
+    <!-- 4b. ROADMAP TRACKER TAB -->
+    <div id="tab-monitor" style="display:none">
+      <h2>📊 Monitor Created Roadmaps &amp; Student Progress</h2>
+      <p style="color:#64748b;font-size:13px;margin-bottom:18px">Track all assigned student roadmaps, week completion percentages, and generate offline student progress reports.</p>
+      <div id="roadmapOverviewTable" style="margin-bottom:28px"></div>
+    </div>
+
+    <!-- 5. VERIFY RESULTS TAB -->
+    <div id="tab-verify" style="display:none">
+      <h2>Student Academic &amp; Exam Performance Verification</h2>
+      <p style="color:#64748b;font-size:14px;margin-bottom:18px">Select a student card below to view their complete academic profile and test performance details.</p>
+
+      <!-- Filter Controls -->
+      <div style="display:flex;gap:12px;margin-bottom:16px;background:#ffffff;padding:14px;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="flex:1">
+          <input id="verifySearch" placeholder="Search student by Name or Regd No..." oninput="renderVerifyStudentCards()" style="margin:0" />
+        </div>
+        <div style="width:200px">
+          <select id="vrType" onchange="renderSelectedStudentResults()" style="margin:0">
+            <option value="">All Exam Types</option>
+            <option value="entrance">Entrance Tests</option>
+            <option value="weekly">Weekly Exams</option>
+            <option value="day3">Day 3 Exams</option>
+            <option value="day7">Day 7 Exams</option>
+            <option value="day21">Day 21 Exams</option>
+            <option value="custom">Custom Exams</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Student Selection Cards List -->
+      <div id="verifyStudentCards" class="student-card-grid"></div>
+
+      <!-- Student Details View Container -->
+      <div id="verifyStudentDetailsView"></div>
+    </div>
+
+    <!-- 6. FACULTY CONNECT TAB -->
+    <div id="tab-connect" style="display:none">
+      <h2>Faculty Connect — In-App Messaging</h2>
+      <div class="chat-container">
+        <div class="chat-contacts" id="chatContactsList"></div>
+        <div class="chat-main">
+          <div style="padding:12px 16px;border-bottom:1px solid #e2e8f0;background:#f8fafc;font-weight:700" id="activeChatHeader">
+            Select a student from the left panel to start chatting
+          </div>
+          <div class="chat-messages" id="chatMessagesView">
+            <p style="color:#94a3b8;text-align:center;margin-top:40px">No active conversation selected.</p>
+          </div>
+          <form class="chat-input-row" onsubmit="return sendChatMessage(event)">
+            <input id="chatInputMsg" placeholder="Type a message..." disabled required />
+            <button type="submit" id="chatSendBtn" disabled>Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- EDIT STUDENT MODAL -->
+<div id="editStudentModal" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="margin:0">Edit Student Details</h2>
+      <button class="secondary" style="width:auto;padding:4px 10px;margin:0" onclick="closeEditModal()">✕</button>
+    </div>
+    <div id="editStError" class="error" style="display:none"></div>
+    <form onsubmit="return submitEditStudent(event)">
+      <input id="editStId" type="hidden" />
+      <label style="font-size:12px;font-weight:600">Full Name</label>
+      <input id="editFullName" required />
+      <label style="font-size:12px;font-weight:600">Registration Number (Regd No)</label>
+      <input id="editRegdNo" required />
+      <label style="font-size:12px;font-weight:600">Branch</label>
+      <select id="editBranch" required></select>
+      <label style="font-size:12px;font-weight:600">Section</label>
+      <select id="editSection" required></select>
+      <label style="font-size:12px;font-weight:600">Year</label>
+      <select id="editYear" required></select>
+      <label style="font-size:12px;font-weight:600">Phone Number</label>
+      <input id="editPhone" required />
+      <label style="font-size:12px;font-weight:600">New Password (optional)</label>
+      <input id="editPassword" type="password" placeholder="Leave blank to keep unchanged" />
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button type="submit" style="flex:1">Save Changes</button>
+        <button type="button" class="secondary" style="flex:1" onclick="closeEditModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- EDIT COURSE MODAL -->
+<div id="editCourseModal" class="modal-overlay" style="display:none">
+  <div class="modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="margin:0">Edit Course Details</h2>
+      <button class="secondary" style="width:auto;padding:4px 10px;margin:0" onclick="closeEditCourseModal()">✕</button>
+    </div>
+    <div id="editCourseError" class="error" style="display:none"></div>
+    <form onsubmit="return submitEditCourse(event)">
+      <input id="editCourseId" type="hidden" />
+      <label style="font-size:12px;font-weight:600">Course Title</label>
+      <input id="editCourseTitle" required />
+      <label style="font-size:12px;font-weight:600">Course Description</label>
+      <textarea id="editCourseDesc" rows="3"></textarea>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button type="submit" style="flex:1">Save Changes</button>
+        <button type="button" class="secondary" style="flex:1" onclick="closeEditCourseModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- STUDENT ACTIVITY MODAL -->
+<div id="activityModal" class="modal-overlay" style="display:none">
+  <div class="modal-content" style="max-width:750px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="margin:0" id="actModalTitle">Student Activity Overview</h2>
+      <button class="secondary" style="width:auto;padding:4px 10px;margin:0" onclick="closeActivityModal()">✕</button>
+    </div>
+</div>
+
+<!-- BULK QUESTION ADD MODAL -->
+<div id="bulkQuestionModal" class="modal-overlay" style="display:none">
+  <div class="modal-content" style="max-width:650px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="margin:0">Bulk Add Questions</h2>
+      <button class="secondary" style="width:auto;padding:4px 10px;margin:0" onclick="closeBulkQuestionModal()">✕</button>
+    </div>
+    <div id="bulkErr" class="error" style="display:none"></div>
+    <p style="font-size:13px;color:#64748b;margin-bottom:12px">
+      Upload a <strong>JSON (.json)</strong>, <strong>CSV (.csv)</strong>, or <strong>Text (.txt)</strong> file from your computer, or copy-paste JSON question data directly below.
+    </p>
+
+    <div style="background:#f8fafc;padding:14px;border-radius:12px;border:1px solid #cbd5e1;margin-bottom:14px">
+      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:6px;color:#1e293b">📁 Select Question File (.json, .csv, or .txt)</label>
+      <input type="file" id="bulkFileInput" accept=".json,.csv,.txt" onchange="handleQuestionFileUpload(event)" style="margin:0;background:#ffffff;padding:8px" />
+      <div style="font-size:12px;color:#64748b;margin-top:6px">
+        ⚡ Selecting a file will automatically parse and import all questions into the builder!
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <button type="button" class="secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="loadSampleTemplate('mcq')">📋 Load MCQ Template</button>
+      <button type="button" class="secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="loadSampleTemplate('coding')">💻 Load Coding Template</button>
+    </div>
+
+    <label style="font-size:12px;font-weight:600">Questions JSON Data</label>
+    <textarea id="bulkQuestionsJson" rows="10" placeholder="Paste JSON array or upload file above..." style="font-family:monospace;font-size:12px"></textarea>
+
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button type="button" style="flex:1" onclick="importBulkQuestions()">🚀 Import Questions into Builder</button>
+      <button type="button" class="secondary" style="flex:1" onclick="closeBulkQuestionModal()">Cancel</button>
+    </div>
+  </div>
+<!-- FACULTY CHANGE PASSWORD MODAL -->
+<div id="changePasswordModal" class="modal-overlay" style="display:none">
+  <div class="modal-content" style="max-width:400px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="margin:0">Change Password</h3>
+      <button class="secondary" style="width:auto;padding:4px 10px;margin:0" onclick="closeChangePasswordModal()">✕</button>
+    </div>
+    <div id="pwdErr" class="error" style="display:none"></div>
+    <div id="pwdOk" class="success" style="display:none"></div>
+    <form onsubmit="return submitChangePassword(event)">
+      <label style="font-size:12px;font-weight:600">Current Password</label>
+      <div style="position:relative">
+        <input id="currPwd" type="password" style="padding-right:40px" required />
+        <button type="button" onclick="togglePasswordVisibility('currPwd', this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#64748b;font-size:16px;cursor:pointer;padding:4px;width:auto;margin:0">👁️</button>
+      </div>
+      <label style="font-size:12px;font-weight:600">New Password</label>
+      <div style="position:relative">
+        <input id="newPwd" type="password" style="padding-right:40px" required />
+        <button type="button" onclick="togglePasswordVisibility('newPwd', this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#64748b;font-size:16px;cursor:pointer;padding:4px;width:auto;margin:0">👁️</button>
+      </div>
+      <button type="submit" style="margin-top:10px">Update Password</button>
+    </form>
+  </div>
+</div>
+
+<!-- OFFLINE STUDENT PROGRESS REPORT MODAL -->
+<div id="offlineReportModal" class="modal-overlay" style="display:none">
+  <div class="modal-content" style="max-width:750px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #e2e8f0;padding-bottom:10px">
+      <h2 style="margin:0">📄 Student Offline Progress Report</h2>
+      <button class="secondary" style="width:auto;padding:4px 10px;margin:0" onclick="closeOfflineReportModal()">✕</button>
+    </div>
+    <div id="offlineReportBody"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button type="button" style="flex:1" class="success-btn" onclick="printOfflineReport()">🖨️ Print / Download Offline Report</button>
+      <button type="button" class="secondary" style="flex:1" onclick="closeOfflineReportModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireAuth('faculty');
+const user = JSON.parse(localStorage.getItem('user'));
+
+// Dynamic Header Time-Based Greeting
+function updateDynamicGreeting() {
+  const hour = new Date().getHours();
+  let timeSalutation = 'Good Morning';
+  if (hour >= 12 && hour < 17) {
+    timeSalutation = 'Good Afternoon';
+  } else if (hour >= 17) {
+    timeSalutation = 'Good Evening';
+  }
+  const nameDisplay = user && user.fullName ? user.fullName : 'Sir';
+  document.getElementById('welcomeGreeting').textContent = `${timeSalutation}, ${nameDisplay}`;
+  document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+updateDynamicGreeting();
+
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  updateThemeBtn();
+}
+function updateThemeBtn() {
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) {
+    btn.textContent = document.body.classList.contains('dark-mode') ? '☀️ Light' : '🌙 Dark';
+  }
+}
+function initTheme() {
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+  }
+  updateThemeBtn();
+}
+initTheme();
+
+function logout() {
+  localStorage.clear();
+  window.location.href = '/index.html';
+}
+
+function openChangePasswordModal() {
+  closeSidebar();
+  document.getElementById('pwdErr').style.display = 'none';
+  document.getElementById('pwdOk').style.display = 'none';
+  document.getElementById('currPwd').value = '';
+  document.getElementById('newPwd').value = '';
+  document.getElementById('changePasswordModal').style.display = 'flex';
+}
+
+function closeChangePasswordModal() {
+  document.getElementById('changePasswordModal').style.display = 'none';
+}
+
+function togglePasswordVisibility(inputId, btnEl) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    btnEl.textContent = '🔒';
+  } else {
+    input.type = 'password';
+    btnEl.textContent = '👁️';
+  }
+}
+
+async function submitChangePassword(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('pwdErr');
+  const okEl = document.getElementById('pwdOk');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+
+  try {
+    const res = await API.post('/faculty/change-password', {
+      currentPassword: document.getElementById('currPwd').value,
+      newPassword: document.getElementById('newPwd').value
+    });
+    okEl.textContent = res.message;
+    okEl.style.display = 'block';
+    setTimeout(() => { closeChangePasswordModal(); }, 1500);
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  }
+  return false;
+}
+
+function toggleSidebar() {
+  const drawer = document.getElementById('sidebarDrawer');
+  const isOpen = drawer.classList.contains('open');
+  if (isOpen) {
+    closeSidebar();
+  } else {
+    openSidebar();
+  }
+}
+
+function openSidebar() {
+  const drawer = document.getElementById('sidebarDrawer');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  drawer.classList.add('open');
+  backdrop.classList.remove('hidden');
+}
+
+function closeSidebar() {
+  const drawer = document.getElementById('sidebarDrawer');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  drawer.classList.remove('open');
+  backdrop.classList.add('hidden');
+}
+
+let studentDataList = [];
+let courseDataList = [];
+let roadmapCache = {};
+let selectedVerifyStudentId = null;
+let activeChatStudentId = null;
+let chatPollTimer = null;
+let performanceChartInstance = null;
+let activityChartInstance = null;
+
+function showTab(name) {
+  // Auto-close sidebar menu whenever user switches tabs
+  closeSidebar();
+
+  ['dashboard', 'students', 'courses', 'exams', 'roadmaps', 'monitor', 'verify', 'connect'].forEach((t) => {
+    const pane = document.getElementById('tab-' + t);
+    const sbtn = document.getElementById('snav-' + t);
+    if (pane) pane.style.display = t === name ? 'block' : 'none';
+    if (sbtn) sbtn.classList.toggle('active', t === name);
+  });
+
+  if (name === 'dashboard') loadDashboardAnalytics();
+  if (name === 'students') loadStudents();
+  if (name === 'courses') loadCoursesForFaculty();
+  if (name === 'exams') loadExamsTab();
+  if (name === 'roadmaps') loadRoadmapsTab();
+  if (name === 'monitor') renderRoadmapOverviewTable();
+  if (name === 'verify') renderVerifyStudentCards();
+  if (name === 'connect') loadConnectTab();
+}
+
+// ---------------- 0. DASHBOARD ANALYTICS HOME TAB ----------------
+async function loadDashboardAnalytics() {
+  try {
+    const data = await API.get('/faculty/analytics');
+
+    document.getElementById('metricTotalStudents').textContent = data.totalStudents || 0;
+    document.getElementById('metricActiveRoadmaps').textContent = data.activeRoadmaps || 0;
+    document.getElementById('metricExamSubmissions').textContent = data.totalSubmissions || 0;
+    document.getElementById('metricUnreadMessages').textContent = data.unreadMessages || 0;
+
+    // Render Donut Chart for Performance
+    const perfCtx = document.getElementById('performanceChart').getContext('2d');
+    if (performanceChartInstance) performanceChartInstance.destroy();
+
+    const passedCount = data.passedSubmissions || 0;
+    const failedCount = data.failedSubmissions || 0;
+    const totalSubs = data.totalSubmissions || 0;
+
+    performanceChartInstance = new Chart(perfCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Passed Submissions', 'Failed Submissions'],
+        datasets: [{
+          data: totalSubs === 0 ? [1, 0] : [passedCount, failedCount],
+          backgroundColor: totalSubs === 0 ? ['#e2e8f0', '#cbd5e1'] : ['#10b981', '#ef4444'],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+
+    // Render Bar Chart for Branch Distribution
+    const actCtx = document.getElementById('activityChart').getContext('2d');
+    if (activityChartInstance) activityChartInstance.destroy();
+
+    const branches = Object.keys(data.branchStats || {});
+    const counts = Object.values(data.branchStats || {});
+
+    activityChartInstance = new Chart(actCtx, {
+      type: 'bar',
+      data: {
+        labels: branches.length === 0 ? ['No Students'] : branches,
+        datasets: [{
+          label: 'Students by Branch',
+          data: counts.length === 0 ? [0] : counts,
+          backgroundColor: '#4f46e5',
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error('Failed to load dashboard analytics', err);
+  }
+}
+
+// ---------------- 1. STUDENTS TAB ----------------
+async function loadStudents() {
+  try {
+    const opts = await API.get('/auth/student/options');
+    fillSelectOptions('asBranch', opts.branches, 'Select Branch');
+    fillSelectOptions('asSection', opts.sections, 'Select Section');
+    fillSelectOptions('asYear', opts.years, 'Select Year');
+    fillSelectOptions('filterBranch', opts.branches, 'All Branches');
+
+    fillSelectOptions('editBranch', opts.branches, 'Select Branch');
+    fillSelectOptions('editSection', opts.sections, 'Select Section');
+    fillSelectOptions('editYear', opts.years, 'Select Year');
+
+    studentDataList = await API.get('/faculty/students');
+    renderStudentTable();
+  } catch (err) {
+    console.error('Failed to load students', err);
+  }
+}
+
+function fillSelectOptions(elementId, array, defaultLabel) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.innerHTML = defaultLabel ? `<option value="">${defaultLabel}</option>` : '';
+  array.forEach(item => {
+    const o = document.createElement('option');
+    o.value = item;
+    o.textContent = item;
+    el.appendChild(o);
+  });
+}
+
+function renderStudentTable() {
+  const div = document.getElementById('studentTable');
+  const selectedBranch = document.getElementById('filterBranch').value;
+  const searchText = (document.getElementById('searchStudent').value || '').toLowerCase().trim();
+
+  let filtered = studentDataList.filter(s => {
+    const matchBranch = !selectedBranch || s.branch === selectedBranch;
+    const matchSearch = !searchText || s.fullName.toLowerCase().includes(searchText) || s.regdNo.toLowerCase().includes(searchText);
+    return matchBranch && matchSearch;
+  });
+
+  if (filtered.length === 0) {
+    div.innerHTML = '<p style="color:#64748b;padding:12px">No registered students match the criteria.</p>';
+    return;
+  }
+
+  let rows = filtered.map(s => {
+    const lastLoginFormatted = s.lastLogin ? new Date(s.lastLogin).toLocaleString() : 'Never logged in';
+    return `<tr>
+      <td><a href="#" style="color:#4f46e5;font-weight:700;text-decoration:none" onclick="openActivityModal('${s._id}','${s.fullName}','${s.regdNo}')">${s.fullName}</a></td>
+      <td><strong>${s.regdNo}</strong></td>
+      <td><span class="badge">${s.branch}</span></td>
+      <td>Sec ${s.section}</td>
+      <td>${s.year}</td>
+      <td>📞 ${s.phone || 'N/A'}</td>
+      <td style="font-size:13px;color:#64748b">${lastLoginFormatted}</td>
+      <td>
+        <button style="width:auto;padding:4px 10px;font-size:12px" onclick="openEditModal('${s._id}')">✏️ Edit</button>
+        <button class="danger" style="width:auto;padding:4px 10px;font-size:12px" onclick="deleteStudent('${s._id}','${s.fullName}')">🗑️ Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  div.innerHTML = `<table>
+    <tr><th>Name</th><th>Regd No</th><th>Branch</th><th>Section</th><th>Year</th><th>Phone</th><th>Last Login</th><th>Actions</th></tr>
+    ${rows}
+  </table>`;
+}
+
+async function addStudent(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('addStError');
+  const okEl = document.getElementById('addStSuccess');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+
+  try {
+    await API.post('/faculty/students', {
+      fullName: asFullName.value,
+      branch: asBranch.value,
+      section: asSection.value,
+      year: asYear.value,
+      regdNo: asRegdNo.value,
+      phone: asPhone.value
+    });
+    okEl.textContent = '✅ Student added successfully! Initial password is Regd No.';
+    okEl.style.display = 'block';
+    e.target.reset();
+    loadStudents();
+  } catch (err) {
+    errEl.textContent = '❌ ' + err.message;
+    errEl.style.display = 'block';
+  }
+  return false;
+}
+
+function openEditModal(studentId) {
+  const student = studentDataList.find(s => s._id === studentId);
+  if (!student) return;
+  document.getElementById('editStId').value = student._id;
+  document.getElementById('editFullName').value = student.fullName;
+  document.getElementById('editRegdNo').value = student.regdNo;
+  document.getElementById('editBranch').value = student.branch;
+  document.getElementById('editSection').value = student.section;
+  document.getElementById('editYear').value = student.year;
+  document.getElementById('editPhone').value = student.phone || '';
+  document.getElementById('editPassword').value = '';
+  document.getElementById('editStError').style.display = 'none';
+  document.getElementById('editStudentModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+  document.getElementById('editStudentModal').style.display = 'none';
+}
+
+async function submitEditStudent(e) {
+  e.preventDefault();
+  const studentId = document.getElementById('editStId').value;
+  const errEl = document.getElementById('editStError');
+  errEl.style.display = 'none';
+
+  try {
+    await API.put(`/faculty/students/${studentId}`, {
+      fullName: editFullName.value,
+      regdNo: editRegdNo.value,
+      branch: editBranch.value,
+      section: editSection.value,
+      year: editYear.value,
+      phone: editPhone.value,
+      password: editPassword.value
+    });
+    closeEditModal();
+    loadStudents();
+  } catch (err) {
+    errEl.textContent = '❌ ' + err.message;
+    errEl.style.display = 'block';
+  }
+  return false;
+}
+
+async function deleteStudent(studentId, name) {
+  if (!confirm(`Are you sure you want to delete student "${name}"? This action will remove all their exam submissions and roadmap progress.`)) return;
+  try {
+    await API.delete(`/faculty/students/${studentId}`);
+    loadStudents();
+  } catch (err) {
+    alert('Delete failed: ' + err.message);
+  }
+}
+
+// ---------------- STUDENT ACTIVITY MODAL ----------------
+async function openActivityModal(studentId, name, regdNo) {
+  document.getElementById('actModalTitle').textContent = `Activity & Proctoring Logs: ${name} (${regdNo})`;
+  const body = document.getElementById('actModalBody');
+  body.innerHTML = '<p style="color:#64748b">Loading student activity...</p>';
+  document.getElementById('activityModal').style.display = 'flex';
+
+  try {
+    const subs = await API.get(`/submissions/student/${studentId}`);
+    const student = studentDataList.find(s => s._id === studentId);
+
+    let html = `<div style="background:#f8fafc;padding:14px;border-radius:10px;margin-bottom:16px;border:1px solid #e2e8f0">
+      <strong>Branch:</strong> ${student ? student.branch : 'N/A'} | <strong>Section:</strong> ${student ? student.section : 'N/A'} | <strong>Year:</strong> ${student ? student.year : 'N/A'}<br/>
+      <strong>Phone:</strong> ${student ? student.phone : 'N/A'} | <strong>Last Login:</strong> ${student && student.lastLogin ? new Date(student.lastLogin).toLocaleString() : 'Never'}
+    </div>`;
+
+    html += `<h3>Exam Submissions &amp; Proctoring Logs</h3>`;
+
+    if (subs.length === 0) {
+      html += '<p style="color:#94a3b8">No exam submissions recorded for this student yet.</p>';
+    } else {
+      html += subs.map(s => `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <strong>${s.test ? s.test.title : 'Test'} (${s.test ? s.test.type : ''})</strong>
+            ${s.passed ? '<span class="badge success-badge">Passed</span>' : '<span class="badge danger-badge">Failed</span>'}
+          </div>
+          <div>Course: <strong>${s.course ? s.course.title : 'Course'}</strong> | Score: <strong>${s.score}/${s.maxScore}</strong></div>
+          <div style="font-size:12px;color:#64748b;margin-top:6px;padding-top:6px;border-top:1px solid #f1f5f9">
+            ⚠️ Proctoring Events — Tab Switches: <strong>${s.proctoring ? s.proctoring.tabSwitchCount || 0 : 0}</strong> | Paste Attempts: <strong>${s.proctoring ? s.proctoring.pasteAttempts || 0 : 0}</strong> ${s.autoSubmitted ? '| <span style="color:#dc2626;font-weight:700">Auto-submitted on switch limit</span>' : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    body.innerHTML = html;
+  } catch (err) {
+    body.innerHTML = `<p class="error">Failed to load activity: ${err.message}</p>`;
+  }
+}
+
+function closeActivityModal() {
+  document.getElementById('activityModal').style.display = 'none';
+}
+
+// ---------------- 2. COURSES TAB ----------------
+async function loadCoursesForFaculty() {
+  try {
+    courseDataList = await API.get('/courses');
+    const div = document.getElementById('courseTable');
+
+    if (courseDataList.length === 0) {
+      div.innerHTML = '<p style="color:#64748b;padding:12px">No courses created yet.</p>';
+      return;
+    }
+
+    let rows = courseDataList.map(c => `
+      <tr>
+        <td><strong>${c.title}</strong></td>
+        <td style="font-size:13px;color:#475569">${c.description || 'No description'}</td>
+        <td style="font-size:13px;color:#64748b">${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'N/A'}</td>
+        <td>
+          <button style="width:auto;padding:4px 10px;font-size:12px" onclick="openEditCourseModal('${c._id}')">✏️ Edit</button>
+          <button class="danger" style="width:auto;padding:4px 10px;font-size:12px" onclick="deleteCourse('${c._id}','${c.title}')">🗑️ Delete</button>
+        </td>
+      </tr>
+    `).join('');
+
+    div.innerHTML = `<table>
+      <tr><th>Course Title</th><th>Description</th><th>Date Created</th><th>Actions</th></tr>
+      ${rows}
+    </table>`;
+  } catch (err) {
+    console.error('Failed to load courses', err);
+  }
+}
+
+async function addCourse(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('addCourseError');
+  const okEl = document.getElementById('addCourseSuccess');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+
+  try {
+    await API.post('/courses', { title: cTitle.value, description: cDesc.value });
+    okEl.textContent = '✅ Course created successfully!';
+    okEl.style.display = 'block';
+    e.target.reset();
+    loadCoursesForFaculty();
+  } catch (err) {
+    errEl.textContent = '❌ ' + err.message;
+    errEl.style.display = 'block';
+  }
+  return false;
+}
+
+function openEditCourseModal(courseId) {
+  const course = courseDataList.find(c => c._id === courseId);
+  if (!course) return;
+  document.getElementById('editCourseId').value = course._id;
+  document.getElementById('editCourseTitle').value = course.title;
+  document.getElementById('editCourseDesc').value = course.description || '';
+  document.getElementById('editCourseError').style.display = 'none';
+  document.getElementById('editCourseModal').style.display = 'flex';
+}
+
+function closeEditCourseModal() {
+  document.getElementById('editCourseModal').style.display = 'none';
+}
+
+async function submitEditCourse(e) {
+  e.preventDefault();
+  const courseId = document.getElementById('editCourseId').value;
+  const errEl = document.getElementById('editCourseError');
+  errEl.style.display = 'none';
+
+  try {
+    await API.put(`/courses/${courseId}`, {
+      title: editCourseTitle.value,
+      description: editCourseDesc.value
+    });
+    closeEditCourseModal();
+    loadCoursesForFaculty();
+  } catch (err) {
+    errEl.textContent = '❌ ' + err.message;
+    errEl.style.display = 'block';
+  }
+  return false;
+}
+
+async function deleteCourse(courseId, title) {
+  if (!confirm(`Are you sure you want to delete the course "${title}"?`)) return;
+  try {
+    await API.delete(`/courses/${courseId}`);
+    loadCoursesForFaculty();
+  } catch (err) {
+    alert('Delete failed: ' + err.message);
+  }
+}
+
+// ---------------- 3. EXAMS & TESTS TAB ----------------
+async function loadExamsTab() {
+  [courseDataList, studentDataList] = await Promise.all([
+    API.get('/courses'),
+    API.get('/faculty/students')
+  ]);
+
+  fillCourseSelectOptions('tCourse', courseDataList, '— Select Course —');
+  fillStudentMultiSelect('tAssignStudents', studentDataList);
+  onTestTypeChange();
+  loadTestList();
+}
+
+function fillStudentMultiSelect(elementId, students) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.innerHTML = '';
+  students.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s._id;
+    o.textContent = `${s.fullName} (${s.regdNo}) — ${s.branch}`;
+    el.appendChild(o);
+  });
+}
+
+function fillCourseSelectOptions(id, courses, defaultLabel) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = defaultLabel ? `<option value="">${defaultLabel}</option>` : '';
+  courses.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c._id; o.textContent = c.title;
+    el.appendChild(o);
+  });
+}
+
+async function loadTestList() {
+  const div = document.getElementById('testListTable');
+  try {
+    const tests = await API.get('/tests/list');
+    if (tests.length === 0) {
+      div.innerHTML = '<p style="color:#64748b">No published tests yet.</p>';
+      return;
+    }
+
+    let rows = tests.map(t => `
+      <tr>
+        <td><strong>${t.title}</strong></td>
+        <td>${t.course ? t.course.title : 'N/A'}</td>
+        <td><span class="badge">${t.type.toUpperCase()}</span></td>
+        <td>${t.weekNumber ? `Week ${t.weekNumber}` : 'N/A'}</td>
+        <td>${t.durationMinutes} mins</td>
+        <td>${t.passingScore}</td>
+      </tr>
+    `).join('');
+
+    div.innerHTML = `<table>
+      <tr><th>Test Title</th><th>Course</th><th>Type</th><th>Week</th><th>Duration</th><th>Passing Score</th></tr>
+      ${rows}
+    </table>`;
+  } catch (err) {
+    div.innerHTML = `<p class="error">${err.message}</p>`;
+  }
+}
+
+function onTestTypeChange() {
+  const type = document.getElementById('tType').value;
+  document.getElementById('weekNumWrap').style.display = type === 'weekly' ? 'block' : 'none';
+
+  const assignWrap = document.getElementById('assignStudentsWrap');
+  const entranceNotice = document.getElementById('entranceTestNotice');
+
+  if (type === 'entrance') {
+    assignWrap.style.display = 'none';
+    entranceNotice.style.display = 'block';
+  } else {
+    assignWrap.style.display = 'block';
+    entranceNotice.style.display = 'none';
+  }
+}
+
+let questionCount = 0;
+function addQuestion(data = null) {
+  questionCount++;
+  const id = questionCount;
+  const container = document.getElementById('questionsContainer');
+  const div = document.createElement('div');
+  div.id = `q-${id}`;
+  div.style.cssText = 'border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;background:#ffffff;position:relative';
+  div.innerHTML = `
+    <button type="button" onclick="removeQuestion(${id})"
+      style="position:absolute;top:10px;right:10px;width:auto;padding:4px 10px;background:#ef4444;font-size:12px">✕ Remove</button>
+    <strong style="font-size:14px">Question ${id}</strong>
+    <label style="font-size:12px;font-weight:600;display:block;margin-top:8px">Type</label>
+    <select id="qtype-${id}" onchange="updateQuestionFields(${id})" style="margin-bottom:8px">
+      <option value="single">Single Choice</option>
+      <option value="mcq">Multiple Choice (MCQ)</option>
+      <option value="coding">Coding</option>
+    </select>
+    <label style="font-size:12px;font-weight:600;display:block">Question Text</label>
+    <textarea id="qtext-${id}" rows="2" placeholder="Enter question text..." style="margin-bottom:8px"></textarea>
+    <div id="qopts-${id}">
+      <label style="font-size:12px;font-weight:600;display:block">Options (one per line)</label>
+      <textarea id="options-${id}" rows="3" placeholder="Option A&#10;Option B&#10;Option C" style="margin-bottom:8px"></textarea>
+      <label style="font-size:12px;font-weight:600;display:block">Correct Answer(s) (one per line, must match option text)</label>
+      <textarea id="correct-${id}" rows="2" placeholder="Option A" style="margin-bottom:8px"></textarea>
+    </div>
+    <div id="qcoding-${id}" style="display:none">
+      <label style="font-size:12px;font-weight:600;display:block">Starter Code</label>
+      <textarea id="starter-${id}" rows="3" placeholder="// Starter code here" style="margin-bottom:8px"></textarea>
+      <label style="font-size:12px;font-weight:600;display:block">Test Cases (JSON format)</label>
+      <textarea id="testcases-${id}" rows="2" placeholder='[{"input":"1 2","expectedOutput":"3","hidden":false}]' style="margin-bottom:8px"></textarea>
+      <label style="font-size:12px;font-weight:600;display:block">Language</label>
+      <select id="lang-${id}" style="margin-bottom:8px">
+        <option value="c">C (GCC)</option>
+        <option value="cpp">C++ (G++)</option>
+        <option value="java">Java (JDK)</option>
+        <option value="python">Python 3</option>
+        <option value="javascript">JavaScript (Node.js)</option>
+      </select>
+    </div>
+    <label style="font-size:12px;font-weight:600;display:block">Explanation / Detailed Solution (Shown to students post-exam)</label>
+    <textarea id="explanation-${id}" rows="2" placeholder="Explain why the correct answer is right..." style="margin-bottom:8px"></textarea>
+
+    <label style="font-size:12px;font-weight:600;display:block">Marks</label>
+    <input id="marks-${id}" type="number" value="1" min="1" style="width:100px;margin-bottom:0" />
+  `;
+  container.appendChild(div);
+
+  if (data) {
+    if (data.type) document.getElementById(`qtype-${id}`).value = data.type;
+    updateQuestionFields(id);
+    if (data.questionText) document.getElementById(`qtext-${id}`).value = data.questionText;
+    if (data.explanation) document.getElementById(`explanation-${id}`).value = data.explanation;
+    if (data.options && Array.isArray(data.options)) document.getElementById(`options-${id}`).value = data.options.join('\n');
+    if (data.correctAnswers && Array.isArray(data.correctAnswers)) document.getElementById(`correct-${id}`).value = data.correctAnswers.join('\n');
+    if (data.starterCode) document.getElementById(`starter-${id}`).value = data.starterCode;
+    if (data.language) document.getElementById(`lang-${id}`).value = data.language;
+    if (data.testCases) document.getElementById(`testcases-${id}`).value = typeof data.testCases === 'string' ? data.testCases : JSON.stringify(data.testCases);
+    if (data.marks) document.getElementById(`marks-${id}`).value = data.marks;
+  }
+}
+
+function updateQuestionFields(id) {
+  const type = document.getElementById(`qtype-${id}`).value;
+  document.getElementById(`qopts-${id}`).style.display = type === 'coding' ? 'none' : 'block';
+  document.getElementById(`qcoding-${id}`).style.display = type === 'coding' ? 'block' : 'none';
+}
+
+function removeQuestion(id) {
+  const el = document.getElementById(`q-${id}`);
+  if (el) el.remove();
+}
+
+function openBulkQuestionModal() {
+  document.getElementById('bulkErr').style.display = 'none';
+  const testType = document.getElementById('tType').value;
+  if (testType === 'coding') {
+    loadSampleTemplate('coding');
+  } else {
+    loadSampleTemplate('mcq');
+  }
+  document.getElementById('bulkQuestionModal').style.display = 'flex';
+}
+
+function closeBulkQuestionModal() {
+  document.getElementById('bulkQuestionModal').style.display = 'none';
+}
+
+function loadSampleTemplate(sampleType) {
+  if (sampleType === 'coding') {
+    const sampleCoding = [
+      {
+        "type": "coding",
+        "questionText": "Write a C++ program that reads two numbers from input and prints their sum.",
+        "language": "c++",
+        "starterCode": "#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    if (cin >> a >> b) {\n        cout << a + b;\n    }\n    return 0;\n}",
+        "testCases": [
+          {"input": "3 5", "expectedOutput": "8", "hidden": false},
+          {"input": "10 20", "expectedOutput": "30", "hidden": true}
+        ],
+        "marks": 5
+      }
+    ];
+    document.getElementById('bulkQuestionsJson').value = JSON.stringify(sampleCoding, null, 2);
+  } else {
+    const sampleMcq = [
+      {
+        "type": "single",
+        "questionText": "What is the size of int data type in C (32-bit architecture)?",
+        "options": ["1 byte", "2 bytes", "4 bytes", "8 bytes"],
+        "correctAnswers": ["4 bytes"],
+        "marks": 1
+      },
+      {
+        "type": "mcq",
+        "questionText": "Which of the following are valid primitive data types in C++?",
+        "options": ["int", "float", "string", "double"],
+        "correctAnswers": ["int", "float", "double"],
+        "marks": 2
+      }
+    ];
+    document.getElementById('bulkQuestionsJson').value = JSON.stringify(sampleMcq, null, 2);
+  }
+}
+
+function importBulkQuestions() {
+  const errEl = document.getElementById('bulkErr');
+  errEl.style.display = 'none';
+  const rawText = document.getElementById('bulkQuestionsJson').value.trim();
+
+  if (!rawText) {
+    errEl.textContent = 'Please paste or load JSON question data.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const questionsArr = JSON.parse(rawText);
+    if (!Array.isArray(questionsArr) || questionsArr.length === 0) {
+      errEl.textContent = 'JSON must be a non-empty array of question objects.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    questionsArr.forEach(q => addQuestion(q));
+    closeBulkQuestionModal();
+  } catch (err) {
+    errEl.textContent = 'Invalid JSON format: ' + err.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function handleQuestionFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const content = e.target.result;
+    const fileName = file.name.toLowerCase();
+    let questionsArr = [];
+
+    try {
+      if (fileName.endsWith('.json')) {
+        questionsArr = JSON.parse(content);
+      } else if (fileName.endsWith('.csv')) {
+        questionsArr = parseCsvQuestions(content);
+      } else if (fileName.endsWith('.txt')) {
+        try {
+          questionsArr = JSON.parse(content);
+        } catch {
+          questionsArr = parsePlainTextQuestions(content);
+        }
+      }
+
+      if (!Array.isArray(questionsArr) || questionsArr.length === 0) {
+        throw new Error('No valid question data found in the file.');
+      }
+
+      // Populate text box for reference
+      document.getElementById('bulkQuestionsJson').value = JSON.stringify(questionsArr, null, 2);
+
+      // Auto-import each question into builder list
+      questionsArr.forEach(q => addQuestion(q));
+
+      const successEl = document.getElementById('testSuccess');
+      if (successEl) {
+        successEl.textContent = `✅ Successfully imported ${questionsArr.length} questions from "${file.name}"!`;
+        successEl.style.display = 'block';
+      }
+
+      closeBulkQuestionModal();
+    } catch (err) {
+      const errEl = document.getElementById('bulkErr');
+      errEl.textContent = `❌ Upload failed: ${err.message}`;
+      errEl.style.display = 'block';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseCsvQuestions(csvText) {
+  const lines = csvText.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) return [];
+
+  // Standard CSV Headers: type,questionText,options,correctAnswers,marks
+  // Options and correctAnswers separated by pipe |
+  const results = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
+    if (cols.length >= 2) {
+      const type = cols[0] || 'single';
+      const questionText = cols[1] || '';
+      const options = cols[2] ? cols[2].split('|').map(s => s.trim()) : [];
+      const correctAnswers = cols[3] ? cols[3].split('|').map(s => s.trim()) : [];
+      const marks = Number(cols[4]) || 1;
+
+      results.push({ type, questionText, options, correctAnswers, marks });
+    }
+  }
+  return results;
+}
+
+function parsePlainTextQuestions(text) {
+  const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+  const questions = [];
+
+  for (const block of blocks) {
+    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) continue;
+
+    let questionText = lines[0].replace(/^(\d+[\.\)]\s*|Q\d*:?\s*)/i, '');
+    const options = [];
+    let correctAnswers = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (/^(Ans|Answer|Correct):/i.test(line)) {
+        const ansVal = line.replace(/^(Ans|Answer|Correct):/i, '').trim();
+        const matchLetter = ansVal.match(/^[A-D]$/i);
+        if (matchLetter && options.length > 0) {
+          const idx = matchLetter[0].toUpperCase().charCodeAt(0) - 65;
+          if (options[idx]) correctAnswers.push(options[idx]);
+        } else {
+          correctAnswers.push(ansVal);
+        }
+      } else if (/^[A-D][\.\)]\s*/i.test(line)) {
+        options.push(line.replace(/^[A-D][\.\)]\s*/i, ''));
+      }
+    }
+
+    if (options.length > 0 && correctAnswers.length === 0) {
+      correctAnswers.push(options[0]);
+    }
+
+    if (questionText) {
+      questions.push({
+        type: 'single',
+        questionText,
+        options,
+        correctAnswers,
+        marks: 1
+      });
+    }
+  }
+
+  return questions;
+}
+
+async function createTest(e) {
+  e.preventDefault();
+  const msgEl = document.getElementById('testMsg');
+  const successEl = document.getElementById('testSuccess');
+  msgEl.style.display = 'none'; successEl.style.display = 'none';
+
+  const questions = [];
+  const cards = document.querySelectorAll('#questionsContainer > div');
+  if (cards.length === 0) {
+    msgEl.textContent = 'Please add at least one question.';
+    msgEl.style.display = 'block'; return false;
+  }
+
+  for (const card of cards) {
+    const idMatch = card.id.match(/q-(\d+)/);
+    if (!idMatch) continue;
+    const id = idMatch[1];
+    const type = document.getElementById(`qtype-${id}`).value;
+    const questionText = (document.getElementById(`qtext-${id}`).value || '').trim();
+    const marks = Number(document.getElementById(`marks-${id}`).value) || 1;
+
+    if (!questionText) {
+      msgEl.textContent = `Question ${id} is missing question text.`;
+      msgEl.style.display = 'block'; return false;
+    }
+
+    const explanation = (document.getElementById(`explanation-${id}`).value || '').trim();
+    const q = { type, questionText, explanation, marks };
+    if (type === 'single' || type === 'mcq') {
+      const optRaw = document.getElementById(`options-${id}`).value || '';
+      const corrRaw = document.getElementById(`correct-${id}`).value || '';
+      q.options = optRaw.split('\n').map(s => s.trim()).filter(Boolean);
+      q.correctAnswers = corrRaw.split('\n').map(s => s.trim()).filter(Boolean);
+      if (q.options.length < 2 || q.correctAnswers.length === 0) {
+        msgEl.textContent = `Question ${id}: Please provide options and correct answers.`;
+        msgEl.style.display = 'block'; return false;
+      }
+    } else {
+      q.starterCode = document.getElementById(`starter-${id}`).value || '';
+      q.language = document.getElementById(`lang-${id}`).value;
+      try { q.testCases = JSON.parse(document.getElementById(`testcases-${id}`).value || '[]'); } catch {
+        msgEl.textContent = `Question ${id}: Invalid JSON test cases.`;
+        msgEl.style.display = 'block'; return false;
+      }
+      q.correctAnswers = []; q.options = [];
+    }
+    questions.push(q);
+  }
+
+  try {
+    const testType = tType.value;
+    const weekNumberVal = testType === 'weekly' ? Number(tWeekNumber.value) : null;
+    const selectedAssigned = testType === 'entrance' ? [] : Array.from(document.getElementById('tAssignStudents').selectedOptions).map(o => o.value);
+
+    await API.post('/tests', {
+      title: tTitle.value,
+      courseId: tCourse.value,
+      type: testType,
+      weekNumber: weekNumberVal,
+      durationMinutes: Number(tDuration.value),
+      passingScore: Number(tPassing.value),
+      assignedStudents: selectedAssigned,
+      questions
+    });
+    successEl.textContent = `✅ Test "${tTitle.value}" published & assigned successfully!`;
+    successEl.style.display = 'block';
+    document.getElementById('questionsContainer').innerHTML = '';
+    questionCount = 0;
+    tTitle.value = '';
+    loadTestList();
+  } catch (err) {
+    msgEl.textContent = '❌ Error: ' + err.message;
+    msgEl.style.display = 'block';
+  }
+  return false;
+}
+
+// ---------------- 4. ROADMAPS TAB ----------------
+let allRoadmapsOverviewData = [];
+
+async function loadRoadmapsTab() {
+  [courseDataList, studentDataList] = await Promise.all([
+    API.get('/courses'),
+    API.get('/faculty/students')
+  ]);
+
+  const rmStudSel = document.getElementById('rmStudentSel');
+  rmStudSel.innerHTML = '<option value="">— select a student (by Regd No) —</option>';
+  studentDataList.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.regdNo;
+    o.textContent = `${s.fullName} (${s.regdNo}) — ${s.branch}`;
+    rmStudSel.appendChild(o);
+  });
+
+  fillCourseSelectOptions('rmCourseSel', courseDataList, '— select a course —');
+  refreshRoadmapDropdown();
+  renderRoadmapOverviewTable();
+}
+
+async function renderRoadmapOverviewTable() {
+  const container = document.getElementById('roadmapOverviewTable');
+  if (!container) return;
+  container.innerHTML = '<p style="color:#64748b">Loading all student created roadmaps &amp; completion progress...</p>';
+
+  try {
+    allRoadmapsOverviewData = await API.get('/roadmaps/all-overview');
+    if (allRoadmapsOverviewData.length === 0) {
+      container.innerHTML = '<p style="color:#64748b;background:#ffffff;padding:16px;border-radius:12px;border:1px solid #e2e8f0">No student roadmaps created yet.</p>';
+      return;
+    }
+
+    container.innerHTML = `
+      <table class="saas-table" style="background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Course</th>
+            <th>Total Weeks</th>
+            <th>Completion Progress</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${allRoadmapsOverviewData.map(rm => {
+            const pct = rm.progressPercent;
+            const pctColor = pct === 100 ? '#10b981' : '#0284c7';
+            return `
+              <tr>
+                <td>
+                  <strong>${rm.student ? rm.student.fullName : 'Student'}</strong>
+                  <div style="font-size:12px;color:#0284c7;font-weight:700">${rm.student ? rm.student.regdNo : ''} (${rm.student ? rm.student.branch : ''})</div>
+                </td>
+                <td><strong>${rm.course ? rm.course.title : 'Course'}</strong></td>
+                <td><span class="badge">${rm.totalWeeks} Weeks</span></td>
+                <td style="min-width:200px">
+                  <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:4px">
+                    <span style="color:${pctColor}">${pct === 100 ? '🎉 Completed' : '⚡ In Progress'}</span>
+                    <span style="color:${pctColor}">${pct}% (${rm.completedWeeks}/${rm.totalWeeks} Wks)</span>
+                  </div>
+                  <div style="height:8px;background:#e2e8f0;border-radius:10px;overflow:hidden">
+                    <div style="height:100%;width:${pct}%;background:${pctColor};border-radius:10px;transition:width 0.4s ease"></div>
+                  </div>
+                </td>
+                <td style="text-align:right">
+                  <div style="display:flex;gap:6px;justify-content:flex-end">
+                    <button class="secondary" style="width:auto;padding:6px 12px;font-size:12px" onclick="editRoadmapFromOverview('${rm._id}')">✏️ Edit Roadmap</button>
+                    <button style="width:auto;padding:6px 12px;font-size:12px" onclick="openOfflineReportModal('${rm._id}')">📥 Offline Report</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    container.innerHTML = `<p class="error">Failed to load roadmap overview: ${err.message}</p>`;
+  }
+}
+
+function editRoadmapFromOverview(roadmapId) {
+  showTab('roadmaps');
+  setTimeout(() => {
+    document.getElementById('upRoadmapSel').value = roadmapId;
+    loadWeekOptions();
+    const el = document.getElementById('upRoadmapSel');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }, 250);
+}
+
+let activeOfflineReportRoadmap = null;
+
+async function openOfflineReportModal(roadmapId) {
+  document.getElementById('offlineReportBody').innerHTML = '<p style="color:#64748b">Generating student offline report...</p>';
+  document.getElementById('offlineReportModal').style.display = 'flex';
+
+  try {
+    const rm = await API.get(`/roadmaps/${roadmapId}`);
+    activeOfflineReportRoadmap = rm;
+    const s = rm.student || {};
+    const c = rm.course || {};
+
+    let weeksHtml = (rm.weeks || []).map(w => {
+      const resCount = (w.resources || []).length;
+      const compResCount = (w.resources || []).filter(r => r.completed).length;
+      const examTitle = w.exam ? `${w.exam.title} (${w.exam.type.toUpperCase()})` : 'No Exam';
+      return `
+        <tr>
+          <td><strong>Week ${w.weekNumber}</strong></td>
+          <td>${w.title || 'Module'}</td>
+          <td>${compResCount} / ${resCount} Resources Completed</td>
+          <td>${examTitle}</td>
+        </tr>
+      `;
+    }).join('');
+
+    document.getElementById('offlineReportBody').innerHTML = `
+      <div id="printReportArea" style="padding:10px">
+        <div style="text-align:center;margin-bottom:16px;border-bottom:2px solid #0284c7;padding-bottom:12px">
+          <h2 style="margin:0;color:#0369a1">🎓 Learning Portal — Offline Student Progress Report</h2>
+          <div style="font-size:12px;color:#64748b">Generated on ${new Date().toLocaleString()}</div>
+        </div>
+
+        <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <strong>Student Name:</strong> ${s.fullName || 'N/A'}<br/>
+            <strong>Registration No:</strong> <span style="color:#0284c7;font-weight:700">${s.regdNo || 'N/A'}</span><br/>
+            <strong>Branch &amp; Sec:</strong> ${s.branch || ''} - Sec ${s.section || ''} (${s.year || ''})
+          </div>
+          <div>
+            <strong>Course Enrolled:</strong> ${c.title || 'N/A'}<br/>
+            <strong>Total Modules:</strong> ${rm.weeks ? rm.weeks.length : 0} Weeks<br/>
+            <strong>Faculty Reviewer:</strong> ${user.fullName} (${user.email})
+          </div>
+        </div>
+
+        <h4 style="margin-bottom:8px">Weekly Module Progression &amp; Resources Checklist</h4>
+        <table class="saas-table" style="width:100%;border:1px solid #cbd5e1;margin-bottom:16px">
+          <thead>
+            <tr>
+              <th>Week</th>
+              <th>Module Title</th>
+              <th>Checklist Progress</th>
+              <th>Week Exam</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${weeksHtml}
+          </tbody>
+        </table>
+
+        <div style="background:#f0f9ff;border:1px solid #bae6fd;padding:12px;border-radius:8px;font-size:12px;color:#0369a1">
+          ℹ️ <strong>Offline Interaction Notes:</strong> Use this report during 1-on-1 offline mentoring sessions to verify physical/offline assignment completion and resolve student queries.
+        </div>
+      </div>
+    `;
+
+  } catch (err) {
+    document.getElementById('offlineReportBody').innerHTML = `<p class="error">Failed to generate report: ${err.message}</p>`;
+  }
+}
+
+function closeOfflineReportModal() {
+  document.getElementById('offlineReportModal').style.display = 'none';
+}
+
+function printOfflineReport() {
+  const printContent = document.getElementById('printReportArea');
+  if (!printContent) return;
+  const win = window.open('', '', 'width=900,height=700');
+  win.document.write(`
+    <html>
+      <head>
+        <title>Student Offline Progress Report</title>
+        <style>
+          body { font-family: sans-serif; padding: 20px; color: #0f172a; }
+          table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+          th, td { border: 1px solid #cbd5e1; padding: 10px; font-size: 13px; text-align: left; }
+          th { background: #f1f5f9; }
+        </style>
+      </head>
+      <body>${printContent.innerHTML}</body>
+    </html>
+  `);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); win.close(); }, 500);
+}
+
+async function onStudentSelectedForRoadmap() {
+  const regdNo = document.getElementById('rmStudentSel').value;
+  if (!regdNo) return;
+  try {
+    const data = await API.get(`/roadmaps/student-courses/${regdNo}`);
+    if (data && data.courses && data.courses.length > 0) {
+      fillCourseSelectOptions('rmCourseSel', data.courses, '— select enrolled course —');
+    }
+  } catch (err) {
+    console.error('Could not auto-populate enrolled courses', err);
+  }
+}
+
+async function refreshRoadmapDropdown() {
+  try {
+    const roadmaps = await API.get('/faculty/roadmaps');
+    roadmapCache = {};
+    const sel = document.getElementById('upRoadmapSel');
+    sel.innerHTML = '<option value="">— select a roadmap —</option>';
+    roadmaps.forEach(r => {
+      roadmapCache[r._id] = r;
+      const o = document.createElement('option');
+      o.value = r._id;
+      const sName = r.student ? `${r.student.fullName} (${r.student.regdNo})` : 'Student';
+      const cName = r.course ? r.course.title : 'Course';
+      o.textContent = `${sName} — ${cName} (${r.weeks.length} weeks)`;
+      sel.appendChild(o);
+    });
+    loadWeekOptions();
+  } catch (e) {}
+}
+
+function loadWeekOptions() {
+  const roadmapId = document.getElementById('upRoadmapSel').value;
+  const weekSel = document.getElementById('upWeekSel');
+  weekSel.innerHTML = '<option value="">— select week —</option>';
+  if (!roadmapId || !roadmapCache[roadmapId]) return;
+  roadmapCache[roadmapId].weeks.forEach(w => {
+    const o = document.createElement('option');
+    o.value = w.weekNumber;
+    o.textContent = `Week ${w.weekNumber}${w.title ? ': ' + w.title : ''}`;
+    weekSel.appendChild(o);
+  });
+}
+
+async function createRoadmap(e) {
+  e.preventDefault();
+  const msgEl = document.getElementById('rmMsg');
+  const okEl = document.getElementById('rmOk');
+  msgEl.style.display = 'none'; okEl.style.display = 'none';
+
+  const regdNo = document.getElementById('rmStudentSel').value;
+  const courseId = document.getElementById('rmCourseSel').value;
+  const n = Number(rmWeeks.value);
+
+  if (!regdNo || !courseId || !n) {
+    msgEl.textContent = 'Please fill all fields.'; msgEl.style.display = 'block'; return false;
+  }
+
+  const weeks = [];
+  for (let i = 1; i <= n; i++) weeks.push({ weekNumber: i, title: `Week ${i}` });
+
+  try {
+    const rm = await API.post('/roadmaps', { regdNo, courseId, weeks });
+    okEl.textContent = `✅ Roadmap created with ${n} weeks!`;
+    okEl.style.display = 'block';
+    await refreshRoadmapDropdown();
+    document.getElementById('upRoadmapSel').value = rm._id;
+    loadWeekOptions();
+  } catch (err) {
+    msgEl.textContent = '❌ ' + err.message; msgEl.style.display = 'block';
+  }
+  return false;
+}
+
+async function uploadResource(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  const errEl = document.getElementById('uploadErr');
+  const okEl = document.getElementById('uploadOk');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+
+  const roadmapId = document.getElementById('upRoadmapSel').value;
+  const weekNumber = document.getElementById('upWeekSel').value;
+
+  if (!roadmapId || !weekNumber || !upFile.files[0]) {
+    errEl.textContent = 'Please complete all fields and choose a file.';
+    errEl.style.display = 'block'; return false;
+  }
+
+  const fd = new FormData();
+  fd.append('resourceType', upType.value);
+  fd.append('title', upTitle.value);
+  fd.append('file', upFile.files[0]);
+
+  btn.textContent = '⏳ Uploading...'; btn.disabled = true;
+  try {
+    await API.post(`/roadmaps/${roadmapId}/week/${weekNumber}/resource`, fd, true);
+    okEl.textContent = '✅ Resource uploaded successfully!';
+    okEl.style.display = 'block';
+    upTitle.value = ''; upFile.value = '';
+    refreshRoadmapDropdown();
+  } catch (err) {
+    errEl.textContent = '❌ Upload failed: ' + err.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = '⬆ Upload Resource'; btn.disabled = false;
+  }
+  return false;
+}
+
+// ---------------- 5. VERIFY RESULTS TAB (Interactive Student Selection & Results View) ----------------
+async function loadVerifyTab() {
+  try {
+    studentDataList = await API.get('/faculty/students');
+    renderVerifyStudentCards();
+  } catch (err) {
+    console.error('Failed to load student list for verification', err);
+  }
+}
+
+function renderVerifyStudentCards() {
+  const container = document.getElementById('verifyStudentCards');
+  const searchText = (document.getElementById('verifySearch').value || '').toLowerCase().trim();
+
+  let filtered = studentDataList.filter(s => {
+    return !searchText || s.fullName.toLowerCase().includes(searchText) || s.regdNo.toLowerCase().includes(searchText);
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<p style="color:#64748b;padding:12px">No registered students found.</p>';
+    document.getElementById('verifyStudentDetailsView').innerHTML = '';
+    return;
+  }
+
+  // Auto-select first student if none selected or selected student is filtered out
+  if (!selectedVerifyStudentId || !filtered.some(s => s._id === selectedVerifyStudentId)) {
+    selectedVerifyStudentId = filtered[0]._id;
+  }
+
+  container.innerHTML = filtered.map(s => `
+    <div class="student-card ${s._id === selectedVerifyStudentId ? 'selected' : ''}" onclick="selectVerifyStudent('${s._id}')">
+      <div style="font-weight:700;color:#1e293b;margin-bottom:4px">${s.fullName}</div>
+      <div style="font-size:13px;color:#4f46e5;font-weight:700">Regd No: ${s.regdNo}</div>
+      <div style="font-size:12px;color:#64748b;margin-top:4px">${s.branch} | Sec ${s.section} (${s.year})</div>
+    </div>
+  `).join('');
+
+  renderSelectedStudentResults();
+}
+
+function selectVerifyStudent(studentId) {
+  selectedVerifyStudentId = studentId;
+  renderVerifyStudentCards();
+}
+
+async function renderSelectedStudentResults() {
+  const view = document.getElementById('verifyStudentDetailsView');
+  if (!selectedVerifyStudentId) {
+    view.innerHTML = '';
+    return;
+  }
+
+  const student = studentDataList.find(s => s._id === selectedVerifyStudentId);
+  const selectedType = document.getElementById('vrType').value;
+
+  view.innerHTML = '<p style="color:#64748b">Loading student academic &amp; exam performance details...</p>';
+
+  try {
+    const subs = await API.get(`/submissions/student/${selectedVerifyStudentId}`);
+    let filteredSubs = subs;
+    if (selectedType) {
+      filteredSubs = subs.filter(s => s.test && s.test.type === selectedType);
+    }
+
+    let headerHtml = `
+      <div style="background:#ffffff;padding:20px;border-radius:16px;border:1px solid #e2e8f0;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h2 style="margin:0;color:#1e1b4b">${student ? student.fullName : 'Student'}</h2>
+            <div style="font-size:14px;color:#4f46e5;font-weight:700;margin-top:2px">Regd No: ${student ? student.regdNo : 'N/A'}</div>
+            <div style="font-size:13px;color:#64748b;margin-top:4px">
+              Branch: <strong>${student ? student.branch : 'N/A'}</strong> | Section: <strong>Sec ${student ? student.section : 'N/A'}</strong> | Year: <strong>${student ? student.year : 'N/A'}</strong> | Phone: <strong>${student ? student.phone : 'N/A'}</strong>
+            </div>
+          </div>
+          <div>
+            <span class="badge" style="font-size:13px;padding:6px 14px">Total Exams Taken: ${subs.length}</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    if (filteredSubs.length === 0) {
+      headerHtml += `<p style="color:#64748b;background:#ffffff;padding:20px;border-radius:14px;border:1px solid #e2e8f0">No exam submissions found for this student${selectedType ? ' matching the selected exam type' : ''}.</p>`;
+      view.innerHTML = headerHtml;
+      return;
+    }
+
+    let resultsHtml = filteredSubs.map(s => {
+      const isAuto = s.status === 'AUTO_SUBMITTED' || s.autoSubmitted;
+      const statusBadge = s.passed
+        ? '<span class="badge success-badge" style="font-size:13px;padding:4px 12px">✅ Passed</span>'
+        : '<span class="badge danger-badge" style="font-size:13px;padding:4px 12px">❌ Failed</span>';
+
+      const submissionTypeBadge = isAuto
+        ? '<span class="badge danger-badge" style="margin-left:6px">🚨 Auto-Submitted</span>'
+        : '<span class="badge success-badge" style="margin-left:6px">📩 Submitted</span>';
+
+      let codingAuditHtml = '';
+      if (s.codingSubmissions && s.codingSubmissions.length > 0) {
+        codingAuditHtml = s.codingSubmissions.map((c, i) => `
+          <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px;margin-top:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <strong style="font-size:13px;color:#0369a1">Coding Q#${i + 1} — Language: ${c.language ? c.language.toUpperCase() : 'N/A'}</strong>
+              <span class="badge ${c.isPassed ? 'success-badge' : 'danger-badge'}">${c.passCount || 0} / ${c.totalCount || 0} Test Cases Passed</span>
+            </div>
+            ${c.compileError ? `<div style="color:#dc2626;font-size:12px;margin-bottom:4px">⚠️ <strong>Compile Error:</strong> ${c.compileError}</div>` : ''}
+            ${c.runtimeError ? `<div style="color:#dc2626;font-size:12px;margin-bottom:4px">⚠️ <strong>Runtime Error:</strong> ${c.runtimeError}</div>` : ''}
+            <pre style="background:#0f172a;color:#f8fafc;padding:10px;border-radius:6px;font-size:12px;margin:4px 0 0;overflow-x:auto">${c.code || '(no code submitted)'}</pre>
+          </div>
+        `).join('');
+      }
+
+      let violationTimelineHtml = '';
+      if (s.violationLogs && s.violationLogs.length > 0) {
+        violationTimelineHtml = `
+          <div style="margin-top:10px;background:#fff5f5;border:1px solid #fecaca;padding:10px;border-radius:8px;font-size:12px">
+            <strong style="color:#991b1b;display:block;margin-bottom:4px">🔴 Security Violation Audit Timeline (${s.violationLogs.length} events logged):</strong>
+            ${s.violationLogs.map((v, idx) => `
+              <div>• Violation #${v.count || (idx + 1)}: <strong>${v.type}</strong> at ${new Date(v.timestamp).toLocaleTimeString()}</div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="card" style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div>
+              <strong style="font-size:16px;color:#1e293b">${s.test ? s.test.title : 'Test'}</strong>
+              <span class="badge" style="margin-left:6px">${s.test ? s.test.type.toUpperCase() : ''}</span>
+              ${submissionTypeBadge}
+            </div>
+            <div>
+              ${statusBadge}
+            </div>
+          </div>
+          <div style="font-size:14px;color:#475569">
+            Course: <strong>${s.course ? s.course.title : 'Course'}</strong> | Score: <strong style="font-size:16px;color:#0f172a">${s.score} / ${s.maxScore}</strong> | Date: ${new Date(s.createdAt).toLocaleString()}
+          </div>
+          <div style="font-size:12px;color:#64748b;margin-top:8px">
+            Submission Reason: <strong style="color:${isAuto ? '#dc2626' : '#166534'}">${s.submissionReason || 'Normal submission'}</strong>
+          </div>
+          ${codingAuditHtml}
+          ${violationTimelineHtml}
+        </div>
+      `;
+    }).join('');
+
+    view.innerHTML = headerHtml + resultsHtml;
+  } catch (err) {
+    view.innerHTML = `<p class="error">Failed to load performance details: ${err.message}</p>`;
+  }
+}
+
+// ---------------- 6. FACULTY CONNECT TAB ----------------
+async function checkUnreadNotifications() {
+  try {
+    const data = await API.get('/messages/unread-counts');
+    const navBadge = document.getElementById('navUnreadBadge');
+    if (navBadge) {
+      if (data.totalUnread > 0) {
+        navBadge.textContent = `🔴 ${data.totalUnread} New`;
+        navBadge.style.display = 'inline-block';
+      } else {
+        navBadge.style.display = 'none';
+      }
+    }
+
+    if (data.unreadBySender) {
+      Object.keys(data.unreadBySender).forEach(senderId => {
+        const badgeEl = document.getElementById(`unread-contact-${senderId}`);
+        if (badgeEl) {
+          badgeEl.textContent = `🔴 ${data.unreadBySender[senderId]} New`;
+          badgeEl.style.display = 'inline-block';
+        }
+      });
+    }
+  } catch (e) {}
+}
+
+setInterval(checkUnreadNotifications, 3000);
+checkUnreadNotifications();
+
+async function loadConnectTab() {
+  const contactsList = document.getElementById('chatContactsList');
+  contactsList.innerHTML = '<p style="color:#94a3b8;padding:12px">Loading contacts...</p>';
+
+  try {
+    const [contacts, unreadData] = await Promise.all([
+      API.get('/messages/contacts'),
+      API.get('/messages/unread-counts')
+    ]);
+    const unreadMap = unreadData.unreadBySender || {};
+
+    if (contacts.length === 0) {
+      contactsList.innerHTML = '<p style="color:#94a3b8;padding:12px">No registered students found to chat.</p>';
+      return;
+    }
+
+    // Auto-select first contact if none selected
+    if (!activeChatStudentId && contacts.length > 0) {
+      activeChatStudentId = contacts[0]._id;
+      document.getElementById('activeChatHeader').textContent = `Chatting with: ${contacts[0].name}`;
+      document.getElementById('chatInputMsg').disabled = false;
+      document.getElementById('chatSendBtn').disabled = false;
+    }
+
+    contactsList.innerHTML = contacts.map(c => {
+      const count = unreadMap[c._id] || 0;
+      const redBadgeHtml = count > 0 
+        ? `<span id="unread-contact-${c._id}" class="badge danger-badge" style="font-size:11px;padding:2px 8px">🔴 ${count} New</span>` 
+        : `<span id="unread-contact-${c._id}" class="badge danger-badge" style="display:none;font-size:11px;padding:2px 8px"></span>`;
+      return `
+        <div class="chat-contact-item ${activeChatStudentId === c._id ? 'active' : ''}" onclick="selectChatStudent('${c._id}','${c.name}')">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:700;color:#1e293b">${c.name}</div>
+            ${redBadgeHtml}
+          </div>
+          <div style="font-size:12px;color:#64748b">${c.sub}</div>
+        </div>
+      `;
+    }).join('');
+
+    if (activeChatStudentId) {
+      fetchChatMessages();
+      if (!chatPollTimer) {
+        chatPollTimer = setInterval(fetchChatMessages, 3000);
+      }
+    }
+  } catch (err) {
+    contactsList.innerHTML = `<p class="error">${err.message}</p>`;
+  }
+}
+
+function selectChatStudent(studentId, name) {
+  activeChatStudentId = studentId;
+  document.getElementById('activeChatHeader').textContent = `Chatting with: ${name}`;
+  document.getElementById('chatInputMsg').disabled = false;
+  document.getElementById('chatSendBtn').disabled = false;
+  loadConnectTab();
+  fetchChatMessages();
+
+  if (chatPollTimer) clearInterval(chatPollTimer);
+  chatPollTimer = setInterval(fetchChatMessages, 3000);
+}
+
+async function fetchChatMessages() {
+  if (!activeChatStudentId) return;
+  const view = document.getElementById('chatMessagesView');
+  try {
+    const messages = await API.get(`/messages/conversation/${activeChatStudentId}`);
+    if (messages.length === 0) {
+      view.innerHTML = '<p style="color:#94a3b8;text-align:center;margin-top:40px">No previous messages. Start the conversation below!</p>';
+      return;
+    }
+
+    const currentUserId = JSON.parse(localStorage.getItem('user')).id;
+    view.innerHTML = messages.map(m => {
+      const isMine = m.sender === currentUserId;
+      const timeStr = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `
+        <div class="chat-bubble ${isMine ? 'mine' : 'theirs'}">
+          ${m.message}
+          <div style="font-size:10px;opacity:0.7;text-align:right;margin-top:4px">${timeStr}</div>
+        </div>
+      `;
+    }).join('');
+    view.scrollTop = view.scrollHeight;
+  } catch (err) {
+    console.error('Chat refresh failed', err);
+  }
+}
+
+async function sendChatMessage(e) {
+  e.preventDefault();
+  const input = document.getElementById('chatInputMsg');
+  const text = input.value.trim();
+  if (!text || !activeChatStudentId) return false;
+
+  try {
+    await API.post('/messages', { receiverId: activeChatStudentId, message: text });
+    input.value = '';
+    fetchChatMessages();
+  } catch (err) {
+    alert('Failed to send message: ' + err.message);
+  }
+  return false;
+}
+
+// Initial tab load (Dashboard Home)
+showTab('dashboard');
+</script>
+</body>
+</html>

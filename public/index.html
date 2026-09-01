@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Learning Portal | Login</title>
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .login-card {
+    width: 100%;
+    max-width: 480px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+  }
+  .login-header {
+    background: linear-gradient(135deg, #4f46e5, #3730a3);
+    padding: 32px 28px;
+    text-align: center;
+    color: #ffffff;
+  }
+  .login-header h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+  }
+  .login-header p {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: #c7d2fe;
+  }
+  .login-body {
+    padding: 28px;
+  }
+  .role-toggle-pills {
+    display: flex;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+  .role-toggle-pills button {
+    flex: 1;
+    margin: 0;
+    background: transparent;
+    color: #64748b;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: none;
+  }
+  .role-toggle-pills button.active {
+    background: #4f46e5;
+    color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+  }
+  .pwd-input-wrap {
+    position: relative;
+  }
+  .pwd-input-wrap input {
+    padding-right: 42px;
+  }
+  .pwd-toggle-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 8px;
+    width: auto;
+    margin: 0;
+  }
+  .pwd-toggle-btn:hover {
+    background: transparent;
+    color: #4f46e5;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="login-header">
+    <div style="font-size:36px;margin-bottom:6px">🎓</div>
+    <h1>Learning Portal</h1>
+    <p>Academic Management &amp; Roadmap System</p>
+  </div>
+
+  <div class="login-body">
+    <!-- ROLE TOGGLE PILLS -->
+    <div class="role-toggle-pills">
+      <button id="tabStudent" class="active" onclick="showRole('student')">👨‍🎓 Student Portal</button>
+      <button id="tabFaculty" onclick="showRole('faculty')">👨‍🏫 Faculty Portal</button>
+    </div>
+
+    <!-- STUDENT PANE -->
+    <div id="studentPane">
+      <div class="tabs" style="margin-bottom:18px">
+        <button id="stLoginTab" class="active" onclick="showStudentForm('login')">Login</button>
+        <button id="stRegTab" onclick="showStudentForm('register')">Create Account</button>
+      </div>
+
+      <!-- STUDENT LOGIN FORM -->
+      <form id="studentLoginForm" onsubmit="return studentLogin(event)">
+        <div id="stLoginError" class="error" style="display:none"></div>
+        
+        <label style="font-size:12px;font-weight:600;display:block">Registration Number</label>
+        <input type="text" placeholder="e.g. 24B91A4731" id="loginRegdNo" required />
+        
+        <label style="font-size:12px;font-weight:600;display:block">Password</label>
+        <div class="pwd-input-wrap">
+          <input type="password" placeholder="Password" id="loginPassword" required />
+          <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('loginPassword', this)" title="Toggle password view">👁️</button>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <small style="color:#64748b">🔑 Default initial password is your Regd No.</small>
+          <a href="#" onclick="showStudentForm('forgot')" style="font-size:13px;color:#4f46e5;font-weight:700;text-decoration:none">Forgot Password?</a>
+        </div>
+
+        <button type="submit" style="padding:12px;font-size:15px">Login to Student Portal</button>
+      </form>
+
+      <!-- STUDENT REGISTER FORM -->
+      <form id="studentRegForm" style="display:none" onsubmit="return studentRegister(event)">
+        <div id="stRegError" class="error" style="display:none"></div>
+
+        <label style="font-size:12px;font-weight:600;display:block">Full Name</label>
+        <input type="text" placeholder="Full Name" id="regFullName" required />
+
+        <div style="display:flex;gap:10px">
+          <div style="flex:1">
+            <label style="font-size:12px;font-weight:600;display:block">Branch</label>
+            <select id="regBranch" required><option value="">Select Branch</option></select>
+          </div>
+          <div style="flex:1">
+            <label style="font-size:12px;font-weight:600;display:block">Section</label>
+            <select id="regSection" required><option value="">Select Section</option></select>
+          </div>
+          <div style="flex:1">
+            <label style="font-size:12px;font-weight:600;display:block">Year</label>
+            <select id="regYear" required><option value="">Select Year</option></select>
+          </div>
+        </div>
+
+        <label style="font-size:12px;font-weight:600;display:block">Registration Number (Regd No)</label>
+        <input type="text" placeholder="e.g. 24B91A4731" id="regRegdNo" required />
+
+        <label style="font-size:12px;font-weight:600;display:block">Phone Number</label>
+        <input type="tel" placeholder="Phone Number" id="regPhone" required />
+
+        <div style="background:#e0e7ff;padding:12px;border-radius:10px;margin-bottom:14px;font-size:13px;color:#3730a3">
+          ℹ️ <strong>Initial Password Notice:</strong> Your Registration Number will be set as your initial password. You can change it anytime in your dashboard after logging in.
+        </div>
+
+        <button type="submit" style="padding:12px;font-size:15px">Create Account</button>
+      </form>
+
+      <!-- FORGOT PASSWORD FORM -->
+      <form id="studentForgotForm" style="display:none" onsubmit="return studentForgotPassword(event)">
+        <div id="stForgotError" class="error" style="display:none"></div>
+        <div id="stForgotSuccess" class="success" style="display:none"></div>
+        <h3 style="margin-bottom:8px;font-size:16px">Reset Your Password</h3>
+        <p style="font-size:13px;color:#64748b;margin-bottom:14px">Enter your Registration Number and registered Phone Number to verify identity.</p>
+
+        <label style="font-size:12px;font-weight:600;display:block">Registration Number</label>
+        <input type="text" placeholder="Registration Number" id="forgotRegdNo" required />
+
+        <label style="font-size:12px;font-weight:600;display:block">Registered Phone Number</label>
+        <input type="tel" placeholder="Registered Phone Number" id="forgotPhone" required />
+
+        <label style="font-size:12px;font-weight:600;display:block">New Password</label>
+        <div class="pwd-input-wrap">
+          <input type="password" placeholder="New Password" id="forgotNewPassword" required />
+          <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('forgotNewPassword', this)" title="Toggle password view">👁️</button>
+        </div>
+
+        <button type="submit" style="padding:12px;font-size:15px">Reset Password</button>
+        <button type="button" class="secondary" style="margin-top:8px;padding:10px" onclick="showStudentForm('login')">Back to Login</button>
+      </form>
+    </div>
+
+    <!-- FACULTY PANE -->
+    <div id="facultyPane" style="display:none">
+      <form onsubmit="return facultyLogin(event)">
+        <div id="facError" class="error" style="display:none"></div>
+
+        <label style="font-size:12px;font-weight:600;display:block">Faculty Email</label>
+        <input type="email" placeholder="admin@college.edu" id="facEmail" required />
+
+        <label style="font-size:12px;font-weight:600;display:block">Password</label>
+        <div class="pwd-input-wrap">
+          <input type="password" placeholder="Password" id="facPassword" required />
+          <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('facPassword', this)" title="Toggle password view">👁️</button>
+        </div>
+
+        <button type="submit" style="padding:12px;font-size:15px;margin-top:10px">Login to Faculty Portal</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+function togglePasswordVisibility(inputId, btnEl) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    btnEl.textContent = '🔒';
+  } else {
+    input.type = 'password';
+    btnEl.textContent = '👁️';
+  }
+}
+
+function showRole(role) {
+  document.getElementById('studentPane').style.display = role === 'student' ? 'block' : 'none';
+  document.getElementById('facultyPane').style.display = role === 'faculty' ? 'block' : 'none';
+  document.getElementById('tabStudent').classList.toggle('active', role === 'student');
+  document.getElementById('tabFaculty').classList.toggle('active', role === 'faculty');
+}
+
+function showStudentForm(which) {
+  document.getElementById('studentLoginForm').style.display = which === 'login' ? 'block' : 'none';
+  document.getElementById('studentRegForm').style.display = which === 'register' ? 'block' : 'none';
+  document.getElementById('studentForgotForm').style.display = which === 'forgot' ? 'block' : 'none';
+  document.getElementById('stLoginTab').classList.toggle('active', which === 'login');
+  document.getElementById('stRegTab').classList.toggle('active', which === 'register');
+}
+
+async function loadDropdowns() {
+  try {
+    const opts = await API.get('/auth/student/options');
+    fill('regBranch', opts.branches);
+    fill('regSection', opts.sections);
+    fill('regYear', opts.years);
+  } catch(e) {}
+}
+function fill(id, arr) {
+  const el = document.getElementById(id);
+  arr.forEach((v) => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    el.appendChild(o);
+  });
+}
+loadDropdowns();
+
+async function studentLogin(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('stLoginError');
+  errEl.style.display = 'none';
+  try {
+    const data = await API.post('/auth/student/login', {
+      regdNo: document.getElementById('loginRegdNo').value,
+      password: document.getElementById('loginPassword').value
+    });
+    saveSession(data.token, data.user);
+    window.location.href = '/student.html';
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  }
+  return false;
+}
+
+async function studentRegister(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('stRegError');
+  errEl.style.display = 'none';
+  try {
+    const data = await API.post('/auth/student/register', {
+      fullName: document.getElementById('regFullName').value,
+      branch: document.getElementById('regBranch').value,
+      section: document.getElementById('regSection').value,
+      year: document.getElementById('regYear').value,
+      regdNo: document.getElementById('regRegdNo').value,
+      phone: document.getElementById('regPhone').value
+    });
+    saveSession(data.token, data.user);
+    window.location.href = '/student.html';
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  }
+  return false;
+}
+
+async function studentForgotPassword(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('stForgotError');
+  const okEl = document.getElementById('stForgotSuccess');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  try {
+    const res = await API.post('/auth/student/forgot-password', {
+      regdNo: document.getElementById('forgotRegdNo').value,
+      phone: document.getElementById('forgotPhone').value,
+      newPassword: document.getElementById('forgotNewPassword').value
+    });
+    okEl.textContent = res.message;
+    okEl.style.display = 'block';
+    setTimeout(() => { showStudentForm('login'); }, 2000);
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  }
+  return false;
+}
+
+async function facultyLogin(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('facError');
+  errEl.style.display = 'none';
+  try {
+    const data = await API.post('/auth/faculty/login', {
+      email: document.getElementById('facEmail').value,
+      password: document.getElementById('facPassword').value
+    });
+    saveSession(data.token, data.user);
+    window.location.href = '/faculty.html';
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  }
+  return false;
+}
+</script>
+</body>
+</html>
