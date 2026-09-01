@@ -10,8 +10,8 @@
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="LMS Portal"
-        android:roundIcon="@drawable/ic_launcher"
+        android:label="Smart Studies"
+        android:roundIcon="@drawable/ic_launcher_round"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.LMSApp">
