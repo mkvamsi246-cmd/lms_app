@@ -1,5 +1,5 @@
 const API = {
-  base: '/api',
+  base: (typeof window !== 'undefined' && window.LMS_BACKEND_URL) ? window.LMS_BACKEND_URL + '/api' : '/api',
   token: () => localStorage.getItem('token'),
   role: () => localStorage.getItem('role'),
 
