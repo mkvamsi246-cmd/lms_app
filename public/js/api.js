@@ -1,7 +1,15 @@
+const RENDER_BACKEND = 'https://lms-app-stgs.onrender.com';
+const BACKEND_URL = (typeof window !== 'undefined' && window.LMS_BACKEND_URL)
+  ? window.LMS_BACKEND_URL
+  : (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app'))
+    ? RENDER_BACKEND
+    : '';
+
 const API = {
-  base: (typeof window !== 'undefined' && window.LMS_BACKEND_URL) ? window.LMS_BACKEND_URL + '/api' : '/api',
+  base: BACKEND_URL + '/api',
   token: () => localStorage.getItem('token'),
   role: () => localStorage.getItem('role'),
+
 
   async request(method, url, body, isFormData) {
     const headers = {};
