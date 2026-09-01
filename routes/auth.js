@@ -5,8 +5,12 @@ const Faculty = require('../models/Faculty');
 
 const router = express.Router();
 
+const JWT_SECRET = process.env.JWT_SECRET || 'lms_super_secret_jwt_key_2024';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
 const signToken = (id, role) =>
-  jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+  jwt.sign({ id, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
 
 // GET dropdown options for registration form
 router.get('/student/options', (req, res) => {
@@ -125,16 +129,51 @@ router.post('/student/login', async (req, res) => {
 router.post('/faculty/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const cleanIdentifier = (email || '').trim().toLowerCase();
-    const faculty = await Faculty.findOne({
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Username/Email and password are required' });
+    }
+
+    const cleanIdentifier = email.trim().toLowerCase();
+    const baseUsername = cleanIdentifier.replace(/@college\.edu$/i, '');
+
+    let faculty = await Faculty.findOne({
       $or: [
         { email: cleanIdentifier },
-        { email: `${cleanIdentifier}@college.edu` }
+        { email: baseUsername },
+        { email: `${baseUsername}@college.edu` }
       ]
     });
+
+    // Auto-seed default faculty account if no faculty records exist in database
+    if (!faculty) {
+      const count = await Faculty.countDocuments();
+      if (count === 0) {
+        console.log('[Auth] No faculty accounts found in DB. Auto-seeding admin accounts...');
+        await Faculty.create({
+          fullName: 'DVSRK Raju',
+          email: 'dvsrkraju',
+          password: '1234'
+        });
+        await Faculty.create({
+          fullName: 'Main Admin',
+          email: 'admin@college.edu',
+          password: 'Admin@123'
+        });
+
+        faculty = await Faculty.findOne({
+          $or: [
+            { email: cleanIdentifier },
+            { email: baseUsername },
+            { email: `${baseUsername}@college.edu` }
+          ]
+        });
+      }
+    }
+
     if (!faculty || !(await faculty.comparePassword(password))) {
       return res.status(401).json({ message: 'Invalid username/email or password' });
     }
+
     const token = signToken(faculty._id, 'faculty');
     res.json({
       token,
@@ -144,5 +183,6 @@ router.post('/faculty/login', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 module.exports = router;

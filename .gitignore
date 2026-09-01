@@ -5,3 +5,13 @@ uploads/ppt/*
 uploads/docx/*
 uploads/pdf/*
 !uploads/**/.gitkeep
+
+.gradle/
+build/
+.idea/
+*.apk
+lms-android-app/.gradle/
+lms-android-app/.idea/
+lms-android-app/app/build/
+lms-android-app/build/
+

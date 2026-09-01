@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'lms_super_secret_jwt_key_2024';
+
 const protect = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -7,13 +9,14 @@ const protect = (req, res, next) => {
   }
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded; // { id, role }
     next();
   } catch (err) {
     return res.status(401).json({ message: 'Not authorized, token invalid' });
   }
 };
+
 
 const requireRole = (role) => (req, res, next) => {
   if (!req.user || req.user.role !== role) {

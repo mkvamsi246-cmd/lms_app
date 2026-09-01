@@ -200,8 +200,8 @@
       <form onsubmit="return facultyLogin(event)">
         <div id="facError" class="error" style="display:none"></div>
 
-        <label style="font-size:12px;font-weight:600;display:block">Faculty Email</label>
-        <input type="email" placeholder="admin@college.edu" id="facEmail" required />
+        <label style="font-size:12px;font-weight:600;display:block">Faculty Username / Email</label>
+        <input type="text" placeholder="dvsrkraju or admin@college.edu" id="facEmail" required />
 
         <label style="font-size:12px;font-weight:600;display:block">Password</label>
         <div class="pwd-input-wrap">
@@ -245,15 +245,26 @@ function showStudentForm(which) {
 }
 
 async function loadDropdowns() {
+  const defaultBranches = ['AIML', 'CIC', 'CSE'];
+  const defaultSections = ['A', 'B', 'C', 'D'];
+  const defaultYears = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+
   try {
     const opts = await API.get('/auth/student/options');
-    fill('regBranch', opts.branches);
-    fill('regSection', opts.sections);
-    fill('regYear', opts.years);
-  } catch(e) {}
+    fill('regBranch', opts.branches && opts.branches.length ? opts.branches : defaultBranches);
+    fill('regSection', opts.sections && opts.sections.length ? opts.sections : defaultSections);
+    fill('regYear', opts.years && opts.years.length ? opts.years : defaultYears);
+  } catch(e) {
+    fill('regBranch', defaultBranches);
+    fill('regSection', defaultSections);
+    fill('regYear', defaultYears);
+  }
 }
 function fill(id, arr) {
   const el = document.getElementById(id);
+  if (!el || !arr) return;
+  const firstOpt = el.options && el.options.length > 0 ? el.options[0].outerHTML : '<option value="">Select</option>';
+  el.innerHTML = firstOpt;
   arr.forEach((v) => {
     const o = document.createElement('option');
     o.value = v; o.textContent = v;
@@ -261,6 +272,7 @@ function fill(id, arr) {
   });
 }
 loadDropdowns();
+
 
 async function studentLogin(e) {
   e.preventDefault();

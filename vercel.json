@@ -4,11 +4,12 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://lms-backend-render.onrender.com/api/:path*"
+      "destination": "/api/index.js"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "https://lms-backend-render.onrender.com/uploads/:path*"
+      "destination": "/api/index.js"
     }
   ]
 }
+

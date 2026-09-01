@@ -732,23 +732,39 @@ async function loadDashboardAnalytics() {
 
 // ---------------- 1. STUDENTS TAB ----------------
 async function loadStudents() {
+  const defaultBranches = ['AIML', 'CIC', 'CSE'];
+  const defaultSections = ['A', 'B', 'C', 'D'];
+  const defaultYears = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+
   try {
     const opts = await API.get('/auth/student/options');
-    fillSelectOptions('asBranch', opts.branches, 'Select Branch');
-    fillSelectOptions('asSection', opts.sections, 'Select Section');
-    fillSelectOptions('asYear', opts.years, 'Select Year');
-    fillSelectOptions('filterBranch', opts.branches, 'All Branches');
+    fillSelectOptions('asBranch', opts.branches && opts.branches.length ? opts.branches : defaultBranches, 'Select Branch');
+    fillSelectOptions('asSection', opts.sections && opts.sections.length ? opts.sections : defaultSections, 'Select Section');
+    fillSelectOptions('asYear', opts.years && opts.years.length ? opts.years : defaultYears, 'Select Year');
+    fillSelectOptions('filterBranch', opts.branches && opts.branches.length ? opts.branches : defaultBranches, 'All Branches');
 
-    fillSelectOptions('editBranch', opts.branches, 'Select Branch');
-    fillSelectOptions('editSection', opts.sections, 'Select Section');
-    fillSelectOptions('editYear', opts.years, 'Select Year');
+    fillSelectOptions('editBranch', opts.branches && opts.branches.length ? opts.branches : defaultBranches, 'Select Branch');
+    fillSelectOptions('editSection', opts.sections && opts.sections.length ? opts.sections : defaultSections, 'Select Section');
+    fillSelectOptions('editYear', opts.years && opts.years.length ? opts.years : defaultYears, 'Select Year');
+  } catch (err) {
+    fillSelectOptions('asBranch', defaultBranches, 'Select Branch');
+    fillSelectOptions('asSection', defaultSections, 'Select Section');
+    fillSelectOptions('asYear', defaultYears, 'Select Year');
+    fillSelectOptions('filterBranch', defaultBranches, 'All Branches');
 
+    fillSelectOptions('editBranch', defaultBranches, 'Select Branch');
+    fillSelectOptions('editSection', defaultSections, 'Select Section');
+    fillSelectOptions('editYear', defaultYears, 'Select Year');
+  }
+
+  try {
     studentDataList = await API.get('/faculty/students');
     renderStudentTable();
   } catch (err) {
     console.error('Failed to load students', err);
   }
 }
+
 
 function fillSelectOptions(elementId, array, defaultLabel) {
   const el = document.getElementById(elementId);
